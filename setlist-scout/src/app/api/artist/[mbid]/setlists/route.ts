@@ -1,33 +1,29 @@
-import { NextResponse } from "next/server";
-const BASE = "https://api.setlist.fm/rest/1.0";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { mbid: string } }
-) {
-  const { searchParams } = new URL(req.url);
-  const page = searchParams.get("p") ?? "1";
+  request: NextRequest,
+  context: { params: { mbid: string } }
+): Promise<NextResponse> {
+  const { mbid } = context.params;
 
-  if (!params.mbid) {
-    return NextResponse.json({ error: "Missing mbid" }, { status: 400 });
+  if (!mbid) {
+    return NextResponse.json({ error: "Missing artist MBID" }, { status: 400 });
   }
 
   const res = await fetch(
-    `${BASE}/artist/${params.mbid}/setlists?p=${page}`,
+    `https://api.setlist.fm/rest/1.0/artist/${mbid}/setlists?p=1`,
     {
       headers: {
+        "x-api-key": process.env.SETLIST_FM_API_KEY as string,
         Accept: "application/json",
-        "x-api-key": process.env.SETLIST_FM_API_KEY ?? "",
-        "Accept-Language": "en",
       },
-      next: { revalidate: 300 },
     }
   );
 
   if (!res.ok) {
-    const msg = await res.text();
-    return NextResponse.json({ error: msg || res.statusText }, { status: res.status });
+    return NextResponse.json({ error: "Failed to fetch" }, { status: res.status });
   }
 
-  return NextResponse.json(await res.json());
+  const data = await res.json();
+  return NextResponse.json(data);
 }
