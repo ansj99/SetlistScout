@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  context: { params: { mbid: string } }
+  context: { params: Promise<{ mbid: string }> }
 ): Promise<NextResponse> {
-  const { mbid } = context.params;
+  const { mbid } = await context.params;
 
   if (!mbid) {
     return NextResponse.json({ error: "Missing artist MBID" }, { status: 400 });
